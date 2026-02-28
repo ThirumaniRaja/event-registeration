@@ -4,7 +4,7 @@ import java.util.List;
 
 import com.guvi.dto.BookingResponse;
 import com.guvi.dto.CreateBookingRequest;
-import com.guvi.services.BookingService;
+import com.guvi.service.BookingService;
 import org.springframework.web.bind.annotation.*;
 
 /**

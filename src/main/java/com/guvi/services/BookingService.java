@@ -1,4 +1,4 @@
-package com.guvi.services;
+package com.guvi.service;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -55,15 +55,14 @@ public class BookingService {
         if (req.getEventId() == null || req.getEventId().isBlank()) {
             throw new IllegalArgumentException("eventId is required");
         }
-//        if (req.getUserId() == null || req.getUserId().isBlank()) {
-//            throw new IllegalArgumentException("userId is required");
-//        }
         if (req.getNumberOfSeats() == null || req.getNumberOfSeats() <= 0) {
             throw new IllegalArgumentException("numberOfSeats must be > 0");
         }
 
         String eventId = req.getEventId().trim();
-        String userId = getCurrentUserid();
+        // retrieves the user email from the SecurityContextHolder
+        // we can use the userRepository to retrieve the user by email -> this will give us the userId
+        String userId = getCurrentUserId();
         int seatsRequested = req.getNumberOfSeats();
 
         // Find event
@@ -101,12 +100,17 @@ public class BookingService {
         return toResponse(saved, event);
     }
 
-    private String getCurrentUserid() {
-        SecurityContext securityContext =  SecurityContextHolder.getContext();
+    /**
+     * Returns the authenticated user's id
+     * @return
+     */
+    private String getCurrentUserId() {
+        SecurityContext securityContext = SecurityContextHolder.getContext();
         Authentication authentication = securityContext.getAuthentication();
-        if(authentication == null || !authentication.isAuthenticated()){
-            throw new IllegalArgumentException("No Authenticated User found");
+        if(authentication == null || !authentication.isAuthenticated()) {
+            throw new IllegalStateException("No authenticated user found");
         }
+
         return authentication.getName();
     }
 
@@ -125,6 +129,16 @@ public class BookingService {
 
     public List<BookingResponse> getBookingsByEvent(String eventId) {
         return enrich(bookingRepository.findByEventId(eventId));
+    }
+
+    /**
+     * Convenience method for "my bookings
+     * @param userId
+     * @return
+     */
+    public List<BookingResponse> getMyBookings() {
+        String userId = getCurrentUserId();
+        return getBookingsByUser(userId);
     }
 
     public List<BookingResponse> getBookingsByUser(String userId) {
@@ -182,10 +196,5 @@ public class BookingService {
         r.setBookingStatus(booking.getStatus());
         r.setCreatedAt(booking.getCreatedAt());
         return r;
-    }
-
-    public List<BookingResponse> getMyBookings(){
-        String userId = getCurrentUserid();
-       return getBookingsByUser(userId);
     }
 }
