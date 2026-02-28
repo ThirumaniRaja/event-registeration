@@ -2,16 +2,35 @@ package com.guvi.model;
 
 import java.time.LocalDateTime;
 
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
+
+/**
+ * Booking document stored in MongoDB.
+ *
+ * IMPORTANT:
+ * - We add @Id so MongoRepository can treat "id" as the document ID.
+ * - We add a no-arg constructor so Spring/Jackson can deserialize it from JSON.
+ */
+@Document(collection = "bookings")
 public class Booking {
 
+    @Id
     private String id;
+
     private String eventId;
     private String userId;
+
+    // number of seats booked in this booking
     private int numberOfSeats;
+
     private BookingStatus status;
     private LocalDateTime createdAt;
 
-    // Constructor
+    // REQUIRED for Jackson + Spring Data
+    public Booking() {}
+
+    // Convenience constructor (not required for REST)
     public Booking(String id, String eventId, String userId, int numberOfSeats) {
         this.id = id;
         this.eventId = eventId;
@@ -20,8 +39,6 @@ public class Booking {
         this.status = BookingStatus.CONFIRMED;
         this.createdAt = LocalDateTime.now();
     }
-
-    // getters and setters
 
     public String getId() {
         return id;

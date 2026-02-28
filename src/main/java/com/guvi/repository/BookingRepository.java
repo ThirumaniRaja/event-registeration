@@ -1,10 +1,8 @@
-package com.guvi.repository;
-
-import org.springframework.data.mongodb.repository.MongoRepository;
-
+package com.guvi.repo;
 
 import com.guvi.model.Booking;
 import com.guvi.model.BookingStatus;
+import org.springframework.data.mongodb.repository.MongoRepository;
 
 import java.util.List;
 
@@ -18,9 +16,5 @@ public interface BookingRepository extends MongoRepository<Booking, String> {
 
     List<Booking> findByEventIdAndStatus(String eventId, BookingStatus status);
 
-    boolean existsByUserIdAndEventIdAndStatus(
-            String userId,
-            String eventId,
-            BookingStatus status
-    );
+    boolean existsByUserIdAndEventIdAndStatus(String userId, String eventId, BookingStatus status);
 }

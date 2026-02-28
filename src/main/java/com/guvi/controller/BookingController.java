@@ -1,129 +1,64 @@
 package com.guvi.controller;
 
-import com.guvi.model.Booking;
-import com.guvi.model.BookingStatus;
-import com.guvi.model.Event;
-import com.guvi.repository.BookingRepository;
-import com.guvi.repository.EventRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import java.util.List;
+
+import com.guvi.dto.BookingResponse;
+import com.guvi.dto.CreateBookingRequest;
+import com.guvi.services.BookingService;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
-
+/**
+ * REST endpoints for Bookings.
+ *
+ * Note: Pre-session version has NO authentication.
+ * In Day #50, we'll introduce roles and then replace /user/{userId}
+ * with a secure /me endpoint.
+ */
 @RestController
-@RequestMapping("/bookings")
+@RequestMapping("/api/bookings")
 public class BookingController {
+    private final BookingService bookingService;
 
-    @Autowired
-    private BookingRepository bookingRepository;
+    public BookingController(BookingService bookingService) {
+        this.bookingService = bookingService;
+    }
 
-    @Autowired
-    private EventRepository eventRepository;
-
-    // Book seats
+    // Create a booking (expects eventId, userId, numberOfSeats in JSON)
     @PostMapping
-    public String createBooking(@RequestBody Booking bookingRequest) {
-
-        Optional<Event> eventOpt = eventRepository.findById(bookingRequest.getEventId());
-
-        if (eventOpt.isEmpty()) {
-            return "Event not found";
-        }
-
-        Event event = eventOpt.get();
-
-        if (!event.isStatus()) {
-            return "Event is not active";
-        }
-
-        if (event.getRemainingSeats() < bookingRequest.getNumberOfSeats()) {
-            return "Not enough seats available";
-        }
-
-        // Reduce seats
-        event.setRemainingSeats(event.getRemainingSeats() - bookingRequest.getNumberOfSeats());
-        eventRepository.save(event);
-
-        // Save booking
-//        Booking booking = new Booking();
-//        booking.setId(UUID.randomUUID().toString());
-//        booking.setEventId(bookingRequest.getEventId());
-//        booking.setUserId(bookingRequest.getUserId());
-//        booking.setNumberOfSeats(bookingRequest.getNumberOfSeats());
-//        booking.setStatus(BookingStatus.CONFIRMED);
-//        booking.setCreatedAt(LocalDateTime.now());
-        Booking booking = new Booking(
-                UUID.randomUUID().toString(),
-                bookingRequest.getEventId(),
-                bookingRequest.getUserId(),
-                bookingRequest.getNumberOfSeats()
-        );
-
-        bookingRepository.save(booking);
-
-        return "Booking confirmed with id: " + booking.getId();
+    public BookingResponse create(@RequestBody CreateBookingRequest request) {
+        return bookingService.book(request);
     }
 
-    // Cancel booking
-    @PutMapping("/{bookingId}/cancel")
-    public String cancelBooking(@PathVariable String bookingId) {
-
-        Optional<Booking> bookingOpt = bookingRepository.findById(bookingId);
-
-        if (bookingOpt.isEmpty()) {
-            return "Booking not found";
-        }
-
-        Booking booking = bookingOpt.get();
-
-        if (booking.getStatus() == BookingStatus.CANCELLED) {
-            return "Booking already cancelled";
-        }
-
-        // restore seats
-        Optional<Event> eventOpt = eventRepository.findById(booking.getEventId());
-        if (eventOpt.isPresent()) {
-            Event event = eventOpt.get();
-            event.setRemainingSeats(event.getRemainingSeats() + booking.getNumberOfSeats());
-            eventRepository.save(event);
-        }
-
-        booking.setStatus(BookingStatus.CANCELLED);
-        bookingRepository.save(booking);
-
-        return "Booking cancelled successfully";
+    // Admin-style list (pre-auth: everyone can call; later restrict)
+    @GetMapping
+    public List<BookingResponse> getAll() {
+        return bookingService.getAllBookings();
     }
 
-    // Get bookings by user
-    @GetMapping("/user/{userId}")
-    public List<Booking> getBookingsByUser(@PathVariable String userId) {
-        return bookingRepository.findByUserId(userId);
+    @GetMapping("/{id}")
+    public BookingResponse getById(@PathVariable String id) {
+        return bookingService.getBookingById(id);
     }
 
-    // Get bookings by event
     @GetMapping("/event/{eventId}")
-    public List<Booking> getBookingsByEvent(@PathVariable String eventId) {
-        return bookingRepository.findByEventId(eventId);
+    public List<BookingResponse> getByEvent(@PathVariable String eventId) {
+        return bookingService.getBookingsByEvent(eventId);
     }
 
-    // Get bookings by user and status
-    @GetMapping("/user/{userId}/status")
-    public List<Booking> getUserBookingsByStatus(
-            @PathVariable String userId,
-            @RequestParam BookingStatus status) {
-
-        return bookingRepository.findByUserIdAndStatus(userId, status);
+    // Pre-auth endpoint. Will become /me after auth is added.
+    @GetMapping("/user/{userId}")
+    public List<BookingResponse> getByUser(@PathVariable String userId) {
+        return bookingService.getBookingsByUser(userId);
     }
 
-    // Get bookings by event and status
-    @GetMapping("/event/{eventId}/status")
-    public List<Booking> getEventBookingsByStatus(
-            @PathVariable String eventId,
-            @RequestParam BookingStatus status) {
+    @GetMapping("/b")
+    public List<BookingResponse> getMyBooking() {
+        return bookingService.getMyBookings();
+    }
 
-        return bookingRepository.findByEventIdAndStatus(eventId, status);
+    // Cancel (soft cancel)
+    @DeleteMapping("/{id}")
+    public BookingResponse cancel(@PathVariable String id) {
+        return bookingService.cancelBooking(id);
     }
 }

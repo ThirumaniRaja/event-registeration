@@ -1,13 +1,15 @@
-package com.guvi.repository;
-import com.guvi.model.Event;
-import org.springframework.data.mongodb.repository.MongoRepository;
+package com.guvi.repo;
 
 import java.time.LocalDate;
 import java.util.List;
 
+import com.guvi.model.Event;
+import org.springframework.data.mongodb.repository.MongoRepository;
+
 public interface EventRepository extends MongoRepository<Event, String> {
 
     List<Event> findByLocation(String location);
-    List<Event> findByDate(LocalDate date);
-    List<Event> findByTitleContainingIgnoreCase(String title);
+    List<Event> findByEventDate(LocalDate eventDate);
+    // case insensitive search + partial search (eg: "concert")
+    List<Event> findByNameContainingIgnoreCase(String name);
 }
