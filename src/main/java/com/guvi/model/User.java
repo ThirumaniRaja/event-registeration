@@ -2,50 +2,37 @@ package com.guvi.model;
 
 import java.util.List;
 
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
+
+@Document(collection = "users")
 public class User {
+
+    @Id
     private String id;
 
-    public User(String id,String email,String passwordhash,List<String> roles,boolean active) {
-        this.active = active;
-        this.roles = roles;
-        this.passwordhash = passwordhash;
-        this.email = email;
-        this.id = id;
-    }
-
-    public User(String id) {
-        this.id = id;
-    }
-
     private String email;
-    private String passwordhash;
+
+    private String passwordHash;
 
     private List<String> roles;
+
     private boolean active;
 
-    public boolean isActive() {
-        return active;
-    }
-
-    public void setActive(boolean active) {
+    public User(String id, String email, String passwordHash, List<String> roles, boolean active) {
+        this.id = id;
+        this.email = email;
+        this.passwordHash = passwordHash;
+        this.roles = roles;
         this.active = active;
     }
 
-    public List<String> getRoles() {
-        return roles;
+    public String getId() {
+        return id;
     }
 
-    public void setRoles(List<String> roles) {
-        this.roles = roles;
-    }
-
-
-    public String getPasswordhash() {
-        return passwordhash;
-    }
-
-    public void setPasswordhash(String passwordhash) {
-        this.passwordhash = passwordhash;
+    public void setId(String id) {
+        this.id = id;
     }
 
     public String getEmail() {
@@ -56,11 +43,27 @@ public class User {
         this.email = email;
     }
 
-    public String getId() {
-        return id;
+    public String getPasswordHash() {
+        return passwordHash;
     }
 
-    public void setId(String id) {
-        this.id = id;
+    public void setPasswordHash(String passwordHash) {
+        this.passwordHash = passwordHash;
+    }
+
+    public List<String> getRoles() {
+        return roles;
+    }
+
+    public void setRoles(List<String> roles) {
+        this.roles = roles;
+    }
+
+    public boolean isActive() {
+        return active;
+    }
+
+    public void setActive(boolean active) {
+        this.active = active;
     }
 }
